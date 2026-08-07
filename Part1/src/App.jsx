@@ -1,4 +1,4 @@
-const Header = (props) => {
+/*const Header = (props) => {
   console.log(props)
   return (
     <div>
@@ -71,5 +71,21 @@ const App = () => {
   )
 }
 
-export default App
+export default */
 
+import {useState} from 'react'
+
+const App =() => { 
+  const[counter, setCounter] = useState(0)
+
+  setTimeout(() => setCounter(counter +1), 1000)
+
+  console.log('rendring......', counter)
+
+  return(
+    <div>{counter}</div>
+  )
+
+}
+
+export default App
