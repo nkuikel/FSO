@@ -1,0 +1,123 @@
+Step 1: Install Axios
+
+If you haven't already:
+
+npm install axios
+Step 2: Create db.json
+
+Place this file in the root of your project (same place as package.json).
+
+{
+  "persons": [
+    {
+      "name": "Arto Hellas",
+      "number": "040-123456",
+      "id": "1"
+    },
+    {
+      "name": "Ada Lovelace",
+      "number": "39-44-5323523",
+      "id": "2"
+    },
+    {
+      "name": "Dan Abramov",
+      "number": "12-43-234345",
+      "id": "3"
+    },
+    {
+      "name": "Mary Poppendieck",
+      "number": "39-23-6423122",
+      "id": "4"
+    }
+  ]
+}
+Step 3: Start the JSON Server
+
+Run:
+
+npx json-server --port 3001 db.json
+
+You should see something like:
+
+Resources
+http://localhost:3001/persons
+
+Open
+
+http://localhost:3001/persons
+
+in your browser.
+
+If you see the JSON data, everything is working.
+
+Step 4: Import Axios
+
+At the top of App.jsx:
+
+import axios from "axios";
+Step 5: Import useEffect
+
+Instead of
+
+import { useState } from "react";
+
+use
+
+import { useState, useEffect } from "react";
+Step 6: Remove the Hardcoded Persons
+
+Delete this:
+
+const [persons, setPersons] = useState([
+  { name: "Arto Hellas", number: "040-123456" },
+  { name: "Ada Lovelace", number: "39-44-5323523" },
+  { name: "Dan Abramov", number: "12-43-234345" },
+  { name: "Mary Poppendieck", number: "39-23-6423122" }
+]);
+
+Replace it with
+
+const [persons, setPersons] = useState([]);
+
+The array starts empty because the data will come from the server.
+
+Step 7: Fetch the Data
+
+Under your state declarations add:
+
+useEffect(() => {
+  axios.get("http://localhost:3001/persons")
+    .then(response => {
+      setPersons(response.data);
+    });
+}, []);
+
+Your component will now:
+
+Render.
+Run the effect once.
+Send a GET request to the server.
+Receive the JSON.
+Store it in persons.
+Re-render with the fetched data.
+Step 8: Your App Should Look Like This
+
+Only the relevant part:
+
+import { useState, useEffect } from "react";
+import axios from "axios";
+
+const App = () => {
+  const [persons, setPersons] = useState([]);
+  const [newName, setNewName] = useState("");
+  const [newNumber, setNewNumber] = useState("");
+
+  useEffect(() => {
+    axios.get("http://localhost:3001/persons")
+      .then(response => {
+        setPersons(response.data);
+      });
+  }, []);
+
+  // Rest of your code...
+};
