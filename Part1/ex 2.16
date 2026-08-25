@@ -1,0 +1,148 @@
+Step 1: Create a Notification Component
+
+Create a new file:
+
+src/components/Notification.jsx
+const Notification = ({ message }) => {
+  if (message === null) {
+    return null;
+  }
+
+  return (
+    <div className="success">
+      {message}
+    </div>
+  );
+};
+
+export default Notification;
+
+If message is null, nothing is rendered.
+
+Step 2: Add CSS
+
+In your index.css (or App.css), add:
+
+.success {
+  color: green;
+  background: lightgrey;
+  font-size: 20px;
+  border: 2px solid green;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+This matches the green success notification shown in the exercise.
+
+Step 3: Add Notification State
+
+In App.jsx:
+
+import Notification from "./components/Notification";
+
+Create a new piece of state:
+
+const [message, setMessage] = useState(null);
+Step 4: Render the Notification
+
+Near the top of your component:
+
+<h2>Phonebook</h2>
+
+<Notification message={message} />
+
+Whenever message is not null, the notification will appear.
+
+Step 5: Show a Message When Adding a Person
+
+Inside your create request:
+
+personService.create(personObject).then(returnedPerson => {
+  setPersons(persons.concat(returnedPerson));
+
+  setMessage(`Added ${returnedPerson.name}`);
+
+  setTimeout(() => {
+    setMessage(null);
+  }, 5000);
+
+  setNewName("");
+  setNewNumber("");
+});
+
+The notification appears immediately and disappears after 5 seconds.
+
+Step 6: Show a Message When Updating a Number
+
+Inside your update request:
+
+personService
+  .update(existingPerson.id, updatedPerson)
+  .then(returnedPerson => {
+    setPersons(
+      persons.map(person =>
+        person.id !== existingPerson.id
+          ? person
+          : returnedPerson
+      )
+    );
+
+    setMessage(`Updated ${returnedPerson.name}`);
+
+    setTimeout(() => {
+      setMessage(null);
+    }, 5000);
+
+    setNewName("");
+    setNewNumber("");
+  });
+What Happens?
+Add Person
+Click Add
+      │
+      ▼
+POST request
+      │
+      ▼
+Person saved
+      │
+      ▼
+setMessage("Added John")
+      │
+      ▼
+Green notification appears
+      │
+      ▼
+5 seconds pass
+      │
+      ▼
+setMessage(null)
+      │
+      ▼
+Notification disappears
+Update Number
+Replace number
+      │
+      ▼
+PUT request
+      │
+      ▼
+Server updates number
+      │
+      ▼
+setMessage("Updated Ada Lovelace")
+      │
+      ▼
+Notification appears
+      │
+      ▼
+5 seconds later
+      │
+      ▼
+Notification disappears
+Your App State Should Now Include
+const [persons, setPersons] = useState([]);
+const [newName, setNewName] = useState("");
+const [newNumber, setNewNumber] = useState("");
+const [message, setMessage] = useState(null);

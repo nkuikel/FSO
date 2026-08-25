@@ -1,0 +1,162 @@
+Step 1: Support Different Notification Types
+
+Your current Notification component probably only shows success messages.
+
+Modify it so it accepts a type prop.
+
+const Notification = ({ message, type }) => {
+  if (message === null) {
+    return null;
+  }
+
+  return (
+    <div className={type}>
+      {message}
+    </div>
+  );
+};
+
+export default Notification;
+Step 2: Add Error CSS
+
+In your CSS:
+
+.success {
+  color: green;
+  background: lightgrey;
+  border: 2px solid green;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
+  font-size: 20px;
+}
+
+.error {
+  color: red;
+  background: lightgrey;
+  border: 2px solid red;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
+  font-size: 20px;
+}
+
+Now success messages will be green and error messages will be red.
+
+Step 3: Add Notification Type State
+
+In App.jsx:
+
+const [message, setMessage] = useState(null);
+const [messageType, setMessageType] = useState("success");
+
+Render it like this:
+
+<Notification
+  message={message}
+  type={messageType}
+/>
+Step 4: Update Success Messages
+
+Whenever you show a success notification, set the type first.
+
+Example when creating:
+
+setMessageType("success");
+setMessage(`Added ${returnedPerson.name}`);
+
+setTimeout(() => {
+  setMessage(null);
+}, 5000);
+
+Do the same for updates.
+
+Step 5: Handle the PUT Error
+
+This is the important part of the exercise.
+
+Replace your update request with:
+
+personService
+  .update(existingPerson.id, updatedPerson)
+  .then(returnedPerson => {
+    setPersons(
+      persons.map(person =>
+        person.id !== existingPerson.id
+          ? person
+          : returnedPerson
+      )
+    );
+
+    setMessageType("success");
+    setMessage(`Updated ${returnedPerson.name}`);
+
+    setTimeout(() => {
+      setMessage(null);
+    }, 5000);
+  })
+  .catch(() => {
+    setMessageType("error");
+    setMessage(
+      `Information of ${existingPerson.name} has already been removed from server`
+    );
+
+    setTimeout(() => {
+      setMessage(null);
+    }, 5000);
+
+    setPersons(
+      persons.filter(person => person.id !== existingPerson.id)
+    );
+  });
+What Happens?
+Everything is fine
+User updates Ada
+        │
+        ▼
+PUT /persons/2
+        │
+        ▼
+200 OK
+        │
+        ▼
+Green notification
+Person was deleted elsewhere
+Browser 1 deletes Ada
+        │
+        ▼
+Browser 2 still has Ada
+        │
+        ▼
+PUT /persons/2
+        │
+        ▼
+404 Not Found
+        │
+        ▼
+catch()
+        │
+        ▼
+Show red notification
+        │
+        ▼
+Remove Ada from UI
+Why remove the person?
+
+Your React state is now incorrect because it still contains a person that no longer exists on the server.
+
+This line:
+
+setPersons(
+  persons.filter(person => person.id !== existingPerson.id)
+);
+
+updates the frontend to match the backend again.
+
+Final Result
+
+When the user tries to update someone who has already been deleted, they will see a red notification such as:
+
+Information of Ada Lovelace has already been removed from server
+
+The person is removed from the list, keeping the UI in sync with the backend. You'll still see the initial 404 Not Found in the browser console (that's expected), but you should not see an "Uncaught (in promise)" error because the rejected promise is now handled with .catch().

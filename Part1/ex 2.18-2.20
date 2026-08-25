@@ -1,0 +1,286 @@
+Final Project Structure
+countries/
+│
+├── src/
+│   ├── components/
+│   │     Country.jsx
+│   │     CountryList.jsx
+│   │     Search.jsx
+│   │     Weather.jsx
+│   │
+│   ├── services/
+│   │     countries.js
+│   │     weather.js
+│   │
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── index.css
+│
+├── .env
+├── package.json
+└── vite.config.js
+Exercise 2.18
+Step 1
+
+Create the project.
+
+npm create vite@latest countries -- --template react
+cd countries
+npm install
+npm install axios
+npm run dev
+Step 2
+
+Create a service.
+
+src/services/countries.js
+
+import axios from "axios";
+
+const baseUrl = "https://studies.cs.helsinki.fi/restcountries/api/all";
+
+const getAll = () => {
+  return axios.get(baseUrl).then(response => response.data);
+};
+
+export default { getAll };
+Step 3
+
+Load all countries once.
+
+import { useEffect, useState } from "react";
+import countryService from "./services/countries";
+
+function App() {
+  const [countries, setCountries] = useState([]);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    countryService.getAll().then(data => {
+      setCountries(data);
+    });
+  }, []);
+}
+Step 4
+
+Create the search field.
+
+<input
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+/>
+Step 5
+
+Filter countries.
+
+const filtered = countries.filter(country =>
+  country.name.common
+    .toLowerCase()
+    .includes(search.toLowerCase())
+);
+Step 6
+
+Render according to the number of matches.
+
+Over 10
+if (filtered.length > 10)
+  return <p>Too many matches, specify another filter.</p>;
+Between 2 and 10
+return (
+  <>
+    {filtered.map(country => (
+      <p key={country.cca3}>
+        {country.name.common}
+      </p>
+    ))}
+  </>
+);
+Exactly 1
+
+Display
+
+name
+capital
+area
+languages
+flag
+
+Example:
+
+const country = filtered[0];
+
+return (
+  <>
+    <h1>{country.name.common}</h1>
+
+    <p>
+      Capital: {country.capital[0]}
+    </p>
+
+    <p>
+      Area: {country.area}
+    </p>
+
+    <h2>Languages</h2>
+
+    <ul>
+      {Object.values(country.languages).map(language => (
+        <li key={language}>{language}</li>
+      ))}
+    </ul>
+
+    <img
+      src={country.flags.png}
+      alt={country.flags.alt}
+      width="200"
+    />
+  </>
+);
+
+This completes 2.18.
+
+Exercise 2.19
+
+Instead of just listing names:
+
+{filtered.map(country => (
+  <p key={country.cca3}>
+    {country.name.common}
+  </p>
+))}
+
+add a Show button.
+
+{filtered.map(country => (
+  <p key={country.cca3}>
+    {country.name.common}
+
+    <button
+      onClick={() => setSearch(country.name.common)}
+    >
+      show
+    </button>
+  </p>
+))}
+
+Since the search becomes the country's full name, your filter now matches exactly one country, automatically displaying its detailed view.
+
+That's all Exercise 2.19 requires.
+
+Exercise 2.20
+
+Now add weather information.
+
+Step 1
+
+Create an OpenWeather account.
+
+Get an API key.
+
+Step 2
+
+Create a .env file.
+
+VITE_WEATHER_KEY=your_api_key_here
+
+Restart Vite.
+
+Step 3
+
+Weather service
+
+services/weather.js
+
+import axios from "axios";
+
+const apiKey = import.meta.env.VITE_WEATHER_KEY;
+
+const getWeather = (city) => {
+  return axios
+    .get(
+      `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`
+    )
+    .then(response => response.data);
+};
+
+export default { getWeather };
+Step 4
+
+Weather component
+
+import { useEffect, useState } from "react";
+import weatherService from "../services/weather";
+
+const Weather = ({ capital }) => {
+  const [weather, setWeather] = useState(null);
+
+  useEffect(() => {
+    weatherService.getWeather(capital).then(data => {
+      setWeather(data);
+    });
+  }, [capital]);
+
+  if (!weather) {
+    return <p>Loading weather...</p>;
+  }
+
+  return (
+    <>
+      <h2>Weather in {capital}</h2>
+
+      <p>
+        Temperature {weather.main.temp} °C
+      </p>
+
+      <img
+        src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
+        alt="Weather icon"
+      />
+
+      <p>
+        Wind {weather.wind.speed} m/s
+      </p>
+    </>
+  );
+};
+
+export default Weather;
+Step 5
+
+Display weather.
+
+In your country details:
+
+<Weather capital={country.capital[0]} />
+Final Application Flow
+App Starts
+      │
+      ▼
+Fetch all countries
+      │
+      ▼
+User types search
+      │
+      ▼
+Filter countries
+      │
+      ├──────────────┐
+      ▼              ▼
+ >10 matches      2-10 matches
+ Show message     Show names + buttons
+                      │
+                      ▼
+                 User clicks Show
+                      │
+                      ▼
+               Exactly one country
+                      │
+                      ▼
+      Display country information
+                      │
+                      ▼
+      Fetch weather for capital
+                      │
+                      ▼
+          Display temperature,
+          wind, and weather icon

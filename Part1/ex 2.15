@@ -1,0 +1,205 @@
+Step 1: Add an Update Function to personService.js
+
+Add a new function:
+
+import axios from "axios";
+
+const baseUrl = "http://localhost:3001/persons";
+
+const getAll = () => {
+  return axios.get(baseUrl).then(response => response.data);
+};
+
+const create = (newPerson) => {
+  return axios.post(baseUrl, newPerson).then(response => response.data);
+};
+
+const remove = (id) => {
+  return axios.delete(`${baseUrl}/${id}`);
+};
+
+const update = (id, updatedPerson) => {
+  return axios
+    .put(`${baseUrl}/${id}`, updatedPerson)
+    .then(response => response.data);
+};
+
+export default {
+  getAll,
+  create,
+  remove,
+  update
+};
+Step 2: Modify addPerson
+
+Instead of immediately creating a new person, first check if the name already exists.
+
+const addPerson = (event) => {
+  event.preventDefault();
+
+  const existingPerson = persons.find(
+    person => person.name === newName
+  );
+
+  if (existingPerson) {
+    // Update number
+  } else {
+    // Create new person
+  }
+};
+Step 3: Ask for Confirmation
+
+Inside the if block:
+
+if (existingPerson) {
+  const confirmUpdate = window.confirm(
+    `${existingPerson.name} is already added to phonebook, replace the old number with a new one?`
+  );
+
+  if (!confirmUpdate) {
+    return;
+  }
+}
+Step 4: Create the Updated Object
+
+We want to keep everything the same except the number.
+
+const updatedPerson = {
+  ...existingPerson,
+  number: newNumber
+};
+
+The spread operator copies all the existing properties (id, name, etc.) and then overwrites the number.
+
+Example:
+
+existingPerson
+{
+  id: "2",
+  name: "Ada Lovelace",
+  number: "39-44-5323523"
+}
+
+becomes
+
+updatedPerson
+{
+  id: "2",
+  name: "Ada Lovelace",
+  number: "555-1234"
+}
+Step 5: Send the PUT Request
+personService
+  .update(existingPerson.id, updatedPerson)
+  .then(returnedPerson => {
+    setPersons(
+      persons.map(person =>
+        person.id !== existingPerson.id
+          ? person
+          : returnedPerson
+      )
+    );
+
+    setNewName("");
+    setNewNumber("");
+  });
+
+The map creates a new array where only the updated person is replaced.
+
+Step 6: Keep the Create Logic
+
+If the person doesn't already exist:
+
+const personObject = {
+  name: newName,
+  number: newNumber
+};
+
+personService.create(personObject).then(returnedPerson => {
+  setPersons(persons.concat(returnedPerson));
+  setNewName("");
+  setNewNumber("");
+});
+Complete addPerson
+const addPerson = (event) => {
+  event.preventDefault();
+
+  const existingPerson = persons.find(
+    person => person.name === newName
+  );
+
+  if (existingPerson) {
+    const confirmUpdate = window.confirm(
+      `${existingPerson.name} is already added to phonebook, replace the old number with a new one?`
+    );
+
+    if (!confirmUpdate) {
+      return;
+    }
+
+    const updatedPerson = {
+      ...existingPerson,
+      number: newNumber
+    };
+
+    personService
+      .update(existingPerson.id, updatedPerson)
+      .then(returnedPerson => {
+        setPersons(
+          persons.map(person =>
+            person.id !== existingPerson.id
+              ? person
+              : returnedPerson
+          )
+        );
+
+        setNewName("");
+        setNewNumber("");
+      });
+  } else {
+    const personObject = {
+      name: newName,
+      number: newNumber
+    };
+
+    personService.create(personObject).then(returnedPerson => {
+      setPersons(persons.concat(returnedPerson));
+      setNewName("");
+      setNewNumber("");
+    });
+  }
+};
+How It Works
+New person
+User enters "John"
+        │
+        ▼
+Not found
+        │
+        ▼
+POST /persons
+        │
+        ▼
+Added to database
+Existing person
+User enters "Ada Lovelace"
+        │
+        ▼
+Found in persons[]
+        │
+        ▼
+window.confirm(...)
+        │
+        ▼
+User clicks OK
+        │
+        ▼
+PUT /persons/2
+        │
+        ▼
+Database updates number
+        │
+        ▼
+React state updated with map()
+
+This completes the exercise's requirement: existing names are updated using an HTTP PUT request instead of creating duplicate entries.

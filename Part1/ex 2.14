@@ -1,0 +1,144 @@
+Step 1: Update personService.js
+
+Add a function to send a DELETE request.
+
+import axios from "axios";
+
+const baseUrl = "http://localhost:3001/persons";
+
+const getAll = () => {
+  return axios.get(baseUrl).then(response => response.data);
+};
+
+const create = (newPerson) => {
+  return axios.post(baseUrl, newPerson).then(response => response.data);
+};
+
+const remove = (id) => {
+  return axios.delete(`${baseUrl}/${id}`);
+};
+
+export default {
+  getAll,
+  create,
+  remove
+};
+
+Notice we use the name remove instead of delete because delete is a reserved JavaScript keyword.
+
+Step 2: Create the Delete Handler
+
+In App.jsx, add:
+
+const deletePerson = (id, name) => {
+  const confirmDelete = window.confirm(`Delete ${name}?`);
+
+  if (!confirmDelete) {
+    return;
+  }
+
+  personService.remove(id).then(() => {
+    setPersons(persons.filter(person => person.id !== id));
+  });
+};
+What this does
+Asks the user for confirmation.
+Sends a DELETE request to the backend.
+Removes the deleted person from React state.
+React re-renders automatically.
+Step 3: Add a Delete Button
+
+If you're rendering your people like this:
+
+{persons.map(person => (
+  <p key={person.id}>
+    {person.name} {person.number}
+  </p>
+))}
+
+change it to:
+
+{persons.map(person => (
+  <p key={person.id}>
+    {person.name} {person.number}
+    <button onClick={() => deletePerson(person.id, person.name)}>
+      delete
+    </button>
+  </p>
+))}
+
+The arrow function is important because you need to pass arguments to deletePerson.
+
+What Happens?
+
+Suppose you click delete for Ada Lovelace.
+
+Step 1
+
+The button runs:
+
+deletePerson(2, "Ada Lovelace");
+Step 2
+
+React shows:
+
+Delete Ada Lovelace?
+Step 3
+
+If you click OK:
+
+personService.remove(2);
+
+This sends:
+
+DELETE http://localhost:3001/persons/2
+Step 4
+
+JSON Server deletes the record from db.json.
+
+Step 5
+
+After the request succeeds:
+
+setPersons(persons.filter(person => person.id !== id));
+
+If persons was:
+
+[
+  { id: 1, name: "Arto" },
+  { id: 2, name: "Ada" },
+  { id: 3, name: "Dan" }
+]
+
+After filtering:
+
+[
+  { id: 1, name: "Arto" },
+  { id: 3, name: "Dan" }
+]
+
+React updates the UI automatically.
+
+Final Flow
+User clicks Delete
+        │
+        ▼
+window.confirm()
+        │
+        ▼
+User clicks OK
+        │
+        ▼
+personService.remove(id)
+        │
+        ▼
+HTTP DELETE /persons/:id
+        │
+        ▼
+JSON Server removes the person
+        │
+        ▼
+setPersons(persons.filter(...))
+        │
+        ▼
+React re-renders without that person
